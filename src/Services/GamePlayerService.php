@@ -1,0 +1,12 @@
+<?php
+
+namespace KumaGames\GamePlayerManager\Services;
+
+interface GamePlayerService
+{
+    public function getPlayers(string $serverId): array;
+    public function getPlayerDetails(string $serverId, string $playerId): array;
+    public function kick(string $serverId, string $playerId, string $reason = ''): bool;
+    public function ban(string $serverId, string $playerId, string $reason = ''): bool;
+    public function op(string $serverId, string $playerId): bool;
+}
