@@ -25,8 +25,10 @@ return [
         'identity' => 'Identität',
         'statistics' => 'Statistiken',
         'statistics_desc' => 'Historische Daten aus den Welt-Stats',
-        'live_status' => 'Live-Status',
-        'live_status_desc' => 'Echtzeitdaten (Nur verfügbar wenn Online)',
+        'live_status' => 'Status',
+        'live_status_desc' => 'Echtzeitdaten vom Server',
+        'offline_status_desc' => 'Offline - Zeigt Daten aus der letzten Speicherdatei',
+        'rcon_disabled_status_desc' => 'RCON deaktiviert - Zeigt Daten aus der Speicherdatei',
         'inventory' => 'Inventar',
         'management' => 'Verwaltung',
         'management_desc' => 'Aktionen für diesen Spieler ausführen',
@@ -98,6 +100,7 @@ return [
         'spectator' => 'Zuschauer',
         'online' => 'Online',
         'offline' => 'Offline',
+        'offline_data_source' => 'Offline (Letzte Speicherdaten)',
     ],
 
     'units' => [

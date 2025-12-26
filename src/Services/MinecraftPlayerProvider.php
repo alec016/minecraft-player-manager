@@ -7,8 +7,15 @@ use App\Models\Server;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\Wings\DaemonCommandRepository;
 
+use KumaGames\GamePlayerManager\Services\Nbt\NbtService;
+
 class MinecraftPlayerProvider implements GamePlayerService
 {
+    private $nbtService;
+
+    public function __construct() {
+        $this->nbtService = new NbtService();
+    }
     public function sendRconCommand(string $serverId, string $command): ?string
     {
         $server = Server::where('uuid', $serverId)->first();
@@ -315,8 +322,15 @@ class MinecraftPlayerProvider implements GamePlayerService
              
              $details['status'] = $isOnline ? 'Online' : 'Offline';
              $details['raw_stats'] = $isOnline 
-                ? 'Player is Online (RCON stats disabled)' 
-                : 'Player is Offline';
+                ? 'Online (RCON disabled)' 
+                : 'Offline';
+
+             // Always try NBT if RCON is disabled (User request)
+             $nbtDetails = $this->getOfflineDetailsFromNbt($server, $uuid ?? $playerId);
+             if ($nbtDetails) {
+                 $details = array_merge($details, $nbtDetails);
+                 $details['raw_stats'] = 'RconDisabled';
+             }
         } elseif (!$enableRcon || !$rconPort || !$hasPass) {
             $details['raw_stats'] = 'RCON is not enabled in server.properties.';
             $details['status'] = 'Config Error';
@@ -453,6 +467,13 @@ class MinecraftPlayerProvider implements GamePlayerService
                          if (str_contains($check, 'No entity') || str_contains($check, 'No player')) {
                              $details['status'] = 'Offline'; 
                              $details['raw_stats'] = "Player is Offline";
+                             
+                             // Fallback to NBT
+                             $nbtDetails = $this->getOfflineDetailsFromNbt($server, $uuid ?? $playerId);
+                             if ($nbtDetails) {
+                                 $details = array_merge($details, $nbtDetails);
+                                 $details['raw_stats'] = 'Offline (Data from Save File)';
+                             }
                          }
                     }
 
@@ -519,5 +540,95 @@ class MinecraftPlayerProvider implements GamePlayerService
         $cmd = trim("clear $playerId");
         // returns "Cleared the inventory of <player>" on success, or "No items to clear", or "No player found"
         return $this->sendRconCommand($serverId, $cmd) !== null;
+    }
+
+    private function getOfflineDetailsFromNbt(Server $server, string $uuid): ?array
+    {
+        if (empty($uuid) || $uuid === 'Unknown') return null;
+
+        // Locate File
+        // Usually world/playerdata/<uuid>.dat
+        // We need to know the level-name
+        
+        /** @var \App\Repositories\Daemon\DaemonFileRepository $fileRepository */
+        $fileRepository = app(\App\Repositories\Daemon\DaemonFileRepository::class);
+        $fileRepository->setServer($server);
+
+        $levelName = 'world';
+        try {
+            $props = $fileRepository->getContent('server.properties');
+            if (preg_match('/^\s*level-name\s*=\s*(.*)$/m', $props, $matches)) {
+                $levelName = trim($matches[1]);
+            }
+        } catch (\Exception $e) {}
+
+        // Construct path relative to server root
+        // Note: DaemonFileRepository usually works with relative paths for content, but we need absolute path for NbtService?
+        // Actually, NbtService needs a local file system path or raw content.
+        // DaemonFileRepository::getContent returns string content. 
+        // Our NbtService::parseFile expects a PATH. 
+        // However, we are in a plugin on the panel. The file might be on a remote node (Wings).
+        // Standard Pelican Panel plugins run on the Panel side. Files are fetched from Wings via API/Repository.
+        // We CANNOT directly access disk unless node is local.
+        // So we should fetch CONTENT using DaemonFileRepository (which handles Wings API) and pass CONTENT to NbtParser.
+        
+        $path = "$levelName/playerdata/$uuid.dat";
+        
+        try {
+            // This pulls the raw binary content strings (API response)
+            // Warning: large files might be an issue, but player.dat is small (few KB).
+            $content = $fileRepository->getContent($path);
+            
+            // adapt NbtService to accept content string
+            $data = $this->nbtService->parseString($content);
+            
+            if (empty($data)) return null;
+
+            $result = [];
+
+            // Extract Health
+            if (isset($data['Health'])) $result['health'] = $data['Health']; // Float on NBT
+            
+            // Extract Food
+            if (isset($data['foodLevel'])) $result['food'] = $data['foodLevel']; // Int
+
+            // Extract XP
+            if (isset($data['XpLevel'])) $result['level'] = $data['XpLevel'];
+
+            // Extract Gamemode
+            if (isset($data['playerGameType'])) {
+                 $gmById = [0 => 'Survival', 1 => 'Creative', 2 => 'Adventure', 3 => 'Spectator'];
+                 $result['gamemode'] = $gmById[$data['playerGameType']] ?? 'Unknown';
+            }
+
+            // Extract Inventory
+            // NBT Inventory structure: List of Compounds {Slot:byte, id:string, Count:byte, tag:{...}}
+            if (isset($data['Inventory']) && is_array($data['Inventory'])) {
+                $inv = [];
+                foreach ($data['Inventory'] as $item) {
+                     // Normalize keys to match RCON format
+                     $slot = $item['Slot'] ?? $item['slot'] ?? null;
+                     $id = $item['id'] ?? $item['Id'] ?? null;
+                     $count = $item['Count'] ?? $item['count'] ?? 1;
+
+                     // NBT Slot is Byte (signed?), RCON is int.
+                     // Filter out invalid items
+                     if ($id && $slot !== null) {
+                         $inv[] = [
+                             'slot' => $slot,
+                             'id' => $id,
+                             'count' => $count,
+                         ];
+                     }
+                }
+                $result['inventory_data'] = $inv;
+            }
+
+            return $result;
+            
+        } catch (\Exception $e) {
+            // File not found or read error
+            return null;
+        }
     }
 }

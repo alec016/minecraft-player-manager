@@ -173,11 +173,14 @@ class PlayerResource extends Resource
                         \Filament\Forms\Components\TextInput::make('deaths')->label(__('minecraft-player-manager::messages.fields.deaths'))->disabled(),
                     ])->columns(4),
 
-                // 3. Live Data (RCON)
                 \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.live_status'))
-                    ->visible(fn () => env('MC_PLAYER_MANAGER_RCON_ENABLED', false))
-                    ->description(__('minecraft-player-manager::messages.sections.live_status_desc'))
+                    ->description(fn ($record) => match($record?->raw_stats) {
+                        'Offline (Data from Save File)' => __('minecraft-player-manager::messages.sections.offline_status_desc'),
+                        'RconDisabled' => __('minecraft-player-manager::messages.sections.rcon_disabled_status_desc'),
+                        default => __('minecraft-player-manager::messages.sections.live_status_desc'),
+                    })
                     ->schema([
+
                         \Filament\Forms\Components\ViewField::make('visual_stats')
                             ->label(__('minecraft-player-manager::messages.fields.status'))
                             ->view('minecraft-player-manager::filament.server.resources.player-resource.widgets.visual-stats-view')
@@ -201,7 +204,6 @@ class PlayerResource extends Resource
 
                 // Inventory Section
                 \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.inventory'))
-                    ->visible(fn () => env('MC_PLAYER_MANAGER_RCON_ENABLED', false))
                     ->schema([
                          \Filament\Forms\Components\ViewField::make('inventory_data')
                             ->label(__('minecraft-player-manager::messages.fields.visual_inventory'))

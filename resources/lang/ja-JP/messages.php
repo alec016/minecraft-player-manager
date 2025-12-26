@@ -25,8 +25,10 @@ return [
         'identity' => 'ID情報',
         'statistics' => '統計データ',
         'statistics_desc' => 'ワールド内の履歴データ',
-        'live_status' => 'ライブステータス',
-        'live_status_desc' => 'リアルタイムデータ（オンライン時のみ有効）',
+        'live_status' => 'ステータス',
+        'live_status_desc' => 'サーバーからのリアルタイムデータ',
+        'offline_status_desc' => 'オフラインのためセーブデータを参照しています',
+        'rcon_disabled_status_desc' => 'RCONが無効のためセーブデータを参照しています',
         'inventory' => 'インベントリ',
         'management' => '管理',
         'management_desc' => 'このプレイヤーに対するアクションを実行',
@@ -98,6 +100,7 @@ return [
         'spectator' => 'スペクテイター',
         'online' => 'オンライン',
         'offline' => 'オフライン',
+        'offline_data_source' => 'オフライン (最終セーブデータ)',
     ],
 
     'units' => [

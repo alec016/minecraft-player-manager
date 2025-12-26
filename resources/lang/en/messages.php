@@ -25,8 +25,10 @@ return [
         'identity' => 'Identity',
         'statistics' => 'Statistics',
         'statistics_desc' => 'Historical data from world stats',
-        'live_status' => 'Live Status',
-        'live_status_desc' => 'Real-time data (Only available when Online)',
+        'live_status' => 'Status',
+        'live_status_desc' => 'Real-time data from server',
+        'offline_status_desc' => 'Offline - Displaying data from last save file',
+        'rcon_disabled_status_desc' => 'RCON disabled - Displaying data from save file',
         'inventory' => 'Inventory',
         'management' => 'Management',
         'management_desc' => 'Perform actions on this player',
@@ -98,6 +100,7 @@ return [
         'spectator' => 'Spectator',
         'online' => 'Online',
         'offline' => 'Offline',
+        'offline_data_source' => 'Offline (Last Saved Data)',
     ],
 
     'units' => [
