@@ -39,6 +39,7 @@ View real-time status with RCON, check inventories, and perform administrative a
     *   **Egg Tag**: The server MUST have the `minecraft` tag assigned for the plugin to be visible.
     *   **Java Edition**: Version 1.13+ recommended (for Data Command support).
     *   **RCON**: Must be enabled (`enable-rcon=true` and valid port/password).
+        *   **Note**: Use a dedicated port (different from the primary server port) and ensure the allocation is assigned correctly (e.g., set the Alias to the Node IP).
     *   **Query**: Must be enabled (`enable-query=true`) for real-time player listing.
 
 ### Installation
@@ -84,6 +85,7 @@ RCONを使用してリアルタイムのステータスを確認したり、イ�
     *   **Egg Tag**: サーバーに `minecraft` タグが付与されている必要があります（タグがないとプラグインは表示されません）。
     *   **Java Edition**: 1.13以上推奨（Dataコマンドの互換性のため）
     *   **RCON**: 有効化必須（`enable-rcon=true` およびポート・パスワード設定）
+        *   **注意**: RCONのポートはプライマリポート以外のポートで解放し、エイリアスにノードのIP等を記載してください。
     *   **Query**: プレイヤーリスト取得のため有効化必須（`enable-query=true`）
 
 ### インストール方法
@@ -132,7 +134,8 @@ Du kannst den Spielerstatus in Echtzeit über RCON einsehen, Inventare prüfen u
 * **Minecraft-Server**:
   * **Egg Tag**: Der Server MUSS den Tag `minecraft` besitzen, damit das Plugin sichtbar ist.
   * **Java Edition**: Version 1.13+ empfohlen (für Data-Command-Unterstützung).
-  * **RCON**: Muss aktiviert sein (`enable-rcon=true` sowie gültiger Port und Passwort).
+  *   **RCON**: Muss aktiviert sein (`enable-rcon=true` sowie gültiger Port und Passwort).
+      *   **Hinweis**: Bitte öffnen Sie den RCON-Port auf einem anderen Port als dem primären Port und geben Sie die IP des Nodes im Alias an.
   * **Query**: Muss aktiviert sein (`enable-query=true`) für die Echtzeit-Spielerliste.
 
 ### Installation
