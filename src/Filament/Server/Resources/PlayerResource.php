@@ -15,14 +15,14 @@ class PlayerResource extends Resource
 {
     protected static ?string $model = \KumaGames\GamePlayerManager\Models\Player::class;
     protected static ?string $slug = 'game-players';
-    protected static string | \BackedEnum | null $navigationIcon = 'tabler-users-group';
-    
+    protected static string|\BackedEnum|null $navigationIcon = 'tabler-users-group';
+
     public static function getNavigationSort(): ?int
     {
         return (int) env('MC_PLAYER_MANAGER_NAV_SORT', 2);
     }
 
-    protected static ?string $navigationLabel = null; 
+    protected static ?string $navigationLabel = null;
 
     public static function getNavigationLabel(): string
     {
@@ -34,7 +34,7 @@ class PlayerResource extends Resource
         $server = \Filament\Facades\Filament::getTenant();
         // Check if the server has the 'minecraft' tag
         $tags = $server->egg->tags ?? [];
-        return parent::canAccess() && in_array('minecraft', $tags);
+        return parent::canAccess() && in_array('minecraft', $tags) && auth()->user()->can('minecraft-player-manager.view', $server);
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -66,16 +66,17 @@ class PlayerResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->state(function ($record) {
-                        if ($record['is_banned']) return 'Banned';
+                        if ($record['is_banned'])
+                            return 'Banned';
                         return $record['online'] ? 'Online' : 'Offline';
                     })
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Online' => 'success',
                         'Banned' => 'danger',
                         'Offline' => 'gray',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'Online' => __('minecraft-player-manager::messages.columns.online'),
                         'Banned' => __('minecraft-player-manager::messages.filters.banned'),
                         'Offline' => __('minecraft-player-manager::messages.columns.offline'),
@@ -84,32 +85,35 @@ class PlayerResource extends Resource
                     ->label(__('minecraft-player-manager::messages.columns.status')),
 
                 Tables\Columns\IconColumn::make('is_op')
-                     ->boolean()
-                     ->label(__('minecraft-player-manager::messages.columns.op')),
+                    ->boolean()
+                    ->label(__('minecraft-player-manager::messages.columns.op')),
             ])
             ->actions([
-                 Action::make('view_details')
+                Action::make('view_details')
                     ->label(__('minecraft-player-manager::messages.actions.view'))
                     ->icon('heroicon-m-eye')
                     ->color('gray')
-                    ->url(fn ($record) => PlayerResource::getUrl('view', ['record' => $record->id])),
-                    
-                 Action::make('op')
-                    ->label(fn ($record) => $record->is_op ? __('minecraft-player-manager::messages.actions.op.label_deop') : __('minecraft-player-manager::messages.actions.op.label_op'))
-                    ->color(fn ($record) => $record->is_op ? 'warning' : 'primary')
-                    ->icon(fn ($record) => $record->is_op ? 'heroicon-m-shield-exclamation' : 'heroicon-m-shield-check')
-                    ->button()
-                    ->action(function ($record) {
-                        if (!$record) return;
-                        
-                        $server = \Filament\Facades\Filament::getTenant();
-                        if (!$server) return; // Context check
+                    ->url(fn($record) => PlayerResource::getUrl('view', ['record' => $record->id])),
 
+                Action::make('op')
+                    ->label(fn($record) => $record->is_op ? __('minecraft-player-manager::messages.actions.op.label_deop') : __('minecraft-player-manager::messages.actions.op.label_op'))
+                    ->color(fn($record) => $record->is_op ? 'warning' : 'primary')
+                    ->icon(fn($record) => $record->is_op ? 'heroicon-m-shield-exclamation' : 'heroicon-m-shield-check')
+                    ->button()
+                    ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
+                    ->action(function ($record) {
+                        if (!$record)
+                            return;
+
+                        $server = \Filament\Facades\Filament::getTenant();
+                        if (!$server)
+                            return; // Context check
+            
                         $command = $record->is_op ? "deop {$record->name}" : "op {$record->name}";
-                        
+
                         $provider = app(MinecraftPlayerProvider::class);
                         $provider->sendRconCommand($server->uuid, $command);
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title($record->is_op ? __('minecraft-player-manager::messages.actions.op.notify_deop') : __('minecraft-player-manager::messages.actions.op.notify_op'))
                             ->success()
@@ -121,10 +125,13 @@ class PlayerResource extends Resource
                     ->color('danger')
                     ->icon('heroicon-m-arrow-right-on-rectangle')
                     ->button()
+                    ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
                     ->action(function ($record) {
-                        if (!$record) return;
+                        if (!$record)
+                            return;
                         $server = \Filament\Facades\Filament::getTenant();
-                        if (!$server) return;
+                        if (!$server)
+                            return;
 
                         $provider = app(MinecraftPlayerProvider::class);
                         $provider->sendRconCommand($server->uuid, "kick {$record->name}");
@@ -133,22 +140,25 @@ class PlayerResource extends Resource
                     ->requiresConfirmation(),
 
                 Action::make('ban')
-                    ->label(fn ($record) => $record->is_banned ? __('minecraft-player-manager::messages.actions.ban.label_unban') : __('minecraft-player-manager::messages.actions.ban.label_ban'))
-                    ->color(fn ($record) => $record->is_banned ? 'success' : 'danger')
-                    ->icon(fn ($record) => $record->is_banned ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
+                    ->label(fn($record) => $record->is_banned ? __('minecraft-player-manager::messages.actions.ban.label_unban') : __('minecraft-player-manager::messages.actions.ban.label_ban'))
+                    ->color(fn($record) => $record->is_banned ? 'success' : 'danger')
+                    ->icon(fn($record) => $record->is_banned ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
                     ->button()
-                    ->form(fn ($record) => $record->is_banned ? [] : [
+                    ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
+                    ->form(fn($record) => $record->is_banned ? [] : [
                         \Filament\Forms\Components\TextInput::make('reason')
                             ->label(__('minecraft-player-manager::messages.actions.ban.reason'))
                             ->default(__('minecraft-player-manager::messages.actions.ban.default_reason')),
                     ])
                     ->action(function (array $data, $record) {
-                        if (!$record) return;
+                        if (!$record)
+                            return;
                         $server = \Filament\Facades\Filament::getTenant();
-                        if (!$server) return;
+                        if (!$server)
+                            return;
 
                         $provider = app(MinecraftPlayerProvider::class);
-                        
+
                         if ($record->is_banned) {
                             $provider->pardon($server->uuid, $record->name);
                             \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.ban.notify_unban'))->success()->send();
@@ -172,7 +182,7 @@ class PlayerResource extends Resource
                         \Filament\Forms\Components\TextInput::make('status')
                             ->label(__('minecraft-player-manager::messages.fields.current_status'))
                             ->disabled()
-                            ->formatStateUsing(fn ($state) => match (strtolower($state ?? '')) {
+                            ->formatStateUsing(fn($state) => match (strtolower($state ?? '')) {
                                 'online' => __('minecraft-player-manager::messages.values.online'),
                                 'offline' => __('minecraft-player-manager::messages.values.offline'),
                                 default => $state,
@@ -191,7 +201,7 @@ class PlayerResource extends Resource
                     ])->columns(4),
 
                 \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.live_status'))
-                    ->description(fn ($record) => match($record?->raw_stats) {
+                    ->description(fn($record) => match ($record?->raw_stats) {
                         'Offline (Data from Save File)' => __('minecraft-player-manager::messages.sections.offline_status_desc'),
                         'RconDisabled' => __('minecraft-player-manager::messages.sections.rcon_disabled_status_desc'),
                         default => __('minecraft-player-manager::messages.sections.live_status_desc'),
@@ -209,7 +219,7 @@ class PlayerResource extends Resource
                         \Filament\Forms\Components\TextInput::make('gamemode')
                             ->label(__('minecraft-player-manager::messages.fields.gamemode'))
                             ->disabled()
-                            ->formatStateUsing(fn ($state) => match (strtolower($state ?? '')) {
+                            ->formatStateUsing(fn($state) => match (strtolower($state ?? '')) {
                                 'survival' => __('minecraft-player-manager::messages.values.survival'),
                                 'creative' => __('minecraft-player-manager::messages.values.creative'),
                                 'adventure' => __('minecraft-player-manager::messages.values.adventure'),
@@ -222,21 +232,25 @@ class PlayerResource extends Resource
                 // Inventory Section
                 \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.inventory'))
                     ->schema([
-                         \Filament\Forms\Components\ViewField::make('inventory_data')
+                        \Filament\Forms\Components\ViewField::make('inventory_data')
                             ->label(__('minecraft-player-manager::messages.fields.visual_inventory'))
                             ->view('minecraft-player-manager::filament.server.resources.player-resource.widgets.inventory-view')
                             ->columnSpanFull(),
-                    ])->collapsible(),
+                    ])
+                    ->visible(fn() => auth()->user()->can('minecraft-player-manager.view_inventory', \Filament\Facades\Filament::getTenant()))
+                    ->collapsible(),
 
                 // Management Section (Actions)
-                 \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.management'))
+                \Filament\Schemas\Components\Section::make(__('minecraft-player-manager::messages.sections.management'))
                     ->description(__('minecraft-player-manager::messages.sections.management_desc'))
                     ->schema([
                         \Filament\Forms\Components\ViewField::make('management_actions')
                             ->view('minecraft-player-manager::filament.server.resources.player-resource.widgets.management-actions')
                             ->columnSpanFull(),
-                    ])->collapsible(),
-                
+                    ])
+                    ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
+                    ->collapsible(),
+
 
 
 

@@ -16,16 +16,16 @@ class ViewPlayer extends ViewRecord
         return __('minecraft-player-manager::messages.pages.view');
     }
 
-    protected function resolveRecord(string | int $key): \Illuminate\Database\Eloquent\Model
+    protected function resolveRecord(string|int $key): \Illuminate\Database\Eloquent\Model
     {
         $server = Filament::getTenant();
         $serverId = $server->uuid ?? 'server-1';
-        
+
         $provider = new MinecraftPlayerProvider();
         $details = $provider->getPlayerDetails($serverId, $key);
-        
+
         $data = array_merge(['id' => $key], $details);
-        
+
         $player = new \KumaGames\GamePlayerManager\Models\Player($data);
         $player->exists = true; // IMPORTANT: Required for Filament Actions to recognize the record context
         return $player;
@@ -43,27 +43,28 @@ class ViewPlayer extends ViewRecord
     public function op_toggle(): \Filament\Actions\Action
     {
         return \Filament\Actions\Action::make('op_toggle')
-            ->label(fn () => $this->record->is_op ? __('minecraft-player-manager::messages.actions.op.label_deop') : __('minecraft-player-manager::messages.actions.op.label_op'))
-            ->icon(fn () => $this->record->is_op ? 'heroicon-m-shield-exclamation' : 'heroicon-m-shield-check')
-            ->color(fn () => $this->record->is_op ? 'danger' : 'success')
+            ->label(fn() => $this->record->is_op ? __('minecraft-player-manager::messages.actions.op.label_deop') : __('minecraft-player-manager::messages.actions.op.label_op'))
+            ->icon(fn() => $this->record->is_op ? 'heroicon-m-shield-exclamation' : 'heroicon-m-shield-check')
+            ->color(fn() => $this->record->is_op ? 'danger' : 'success')
+            ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
             ->requiresConfirmation()
-            ->modalHeading(fn () => $this->record->is_op ? __('minecraft-player-manager::messages.actions.op.heading_deop') : __('minecraft-player-manager::messages.actions.op.heading_op'))
-            ->modalDescription(fn () => $this->record->is_op ? 
-                __('minecraft-player-manager::messages.actions.op.desc_deop') : 
+            ->modalHeading(fn() => $this->record->is_op ? __('minecraft-player-manager::messages.actions.op.heading_deop') : __('minecraft-player-manager::messages.actions.op.heading_op'))
+            ->modalDescription(fn() => $this->record->is_op ?
+                __('minecraft-player-manager::messages.actions.op.desc_deop') :
                 __('minecraft-player-manager::messages.actions.op.desc_op'))
             ->action(function ($record) {
                 $server = Filament::getTenant();
                 $serverId = $server->uuid ?? 'server-1';
                 $provider = new MinecraftPlayerProvider();
-                
+
                 if ($record->is_op) {
-                        $provider->deop($serverId, $record->name);
-                        \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.op.notify_deop'))->success()->send();
+                    $provider->deop($serverId, $record->name);
+                    \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.op.notify_deop'))->success()->send();
                 } else {
-                        $provider->op($serverId, $record->name);
-                        \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.op.notify_op'))->success()->send();
+                    $provider->op($serverId, $record->name);
+                    \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.op.notify_op'))->success()->send();
                 }
-                
+
                 $this->refreshPlayer();
             });
     }
@@ -74,6 +75,7 @@ class ViewPlayer extends ViewRecord
             ->label(__('minecraft-player-manager::messages.actions.clear_inventory.label'))
             ->icon('heroicon-m-trash')
             ->color('danger')
+            ->visible(fn() => auth()->user()->can('minecraft-player-manager.view_inventory', \Filament\Facades\Filament::getTenant()))
             ->requiresConfirmation()
             ->modalDescription(__('minecraft-player-manager::messages.actions.clear_inventory.desc'))
             ->action(function ($record) {
@@ -82,7 +84,7 @@ class ViewPlayer extends ViewRecord
                 $provider = new MinecraftPlayerProvider();
                 $provider->clearInventory($serverId, $record->name);
                 \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.clear_inventory.notify'))->success()->send();
-                
+
                 $this->refreshPlayer();
             });
     }
@@ -93,6 +95,7 @@ class ViewPlayer extends ViewRecord
             ->label(__('minecraft-player-manager::messages.actions.kick.label'))
             ->icon('heroicon-m-arrow-right-start-on-rectangle')
             ->color('danger')
+            ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
             ->form([
                 \Filament\Forms\Components\TextInput::make('reason')
                     ->label(__('minecraft-player-manager::messages.actions.kick.reason'))
@@ -104,7 +107,7 @@ class ViewPlayer extends ViewRecord
                 $provider = new MinecraftPlayerProvider();
                 $provider->kick($serverId, $record->name, $data['reason']);
                 \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.kick.notify'))->success()->send();
-                
+
                 sleep(1);
                 $this->refreshPlayer();
             });
@@ -113,10 +116,11 @@ class ViewPlayer extends ViewRecord
     public function ban(): \Filament\Actions\Action
     {
         return \Filament\Actions\Action::make('ban')
-            ->label(fn () => $this->record->is_banned ? __('minecraft-player-manager::messages.actions.ban.label_unban') : __('minecraft-player-manager::messages.actions.ban.label_ban'))
-            ->icon(fn () => $this->record->is_banned ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
-            ->color(fn () => $this->record->is_banned ? 'success' : 'danger')
-            ->form(fn () => $this->record->is_banned ? [] : [
+            ->label(fn() => $this->record->is_banned ? __('minecraft-player-manager::messages.actions.ban.label_unban') : __('minecraft-player-manager::messages.actions.ban.label_ban'))
+            ->icon(fn() => $this->record->is_banned ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
+            ->color(fn() => $this->record->is_banned ? 'success' : 'danger')
+            ->visible(fn() => auth()->user()->can('minecraft-player-manager.interact_with_player', \Filament\Facades\Filament::getTenant()))
+            ->form(fn() => $this->record->is_banned ? [] : [
                 \Filament\Forms\Components\TextInput::make('reason')
                     ->label(__('minecraft-player-manager::messages.actions.ban.reason'))
                     ->default(__('minecraft-player-manager::messages.actions.ban.default_reason')),
@@ -126,15 +130,15 @@ class ViewPlayer extends ViewRecord
                 $server = Filament::getTenant();
                 $serverId = $server->uuid ?? 'server-1';
                 $provider = new MinecraftPlayerProvider();
-                
+
                 if ($record->is_banned) {
                     $provider->pardon($serverId, $record->name);
                     \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.ban.notify_unban'))->success()->send();
                 } else {
                     $provider->ban($serverId, $record->name, $data['reason'] ?? null);
-                     \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.ban.notify_ban'))->success()->send();
+                    \Filament\Notifications\Notification::make()->title(__('minecraft-player-manager::messages.actions.ban.notify_ban'))->success()->send();
                 }
-                
+
                 sleep(1);
                 $this->refreshPlayer();
             });

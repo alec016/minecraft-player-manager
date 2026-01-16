@@ -2,7 +2,7 @@
 
 return [
     'navigation_label' => 'Játékosok',
-    
+
     'columns' => [
         'avatar' => 'Avatár',
         'name' => 'Felhasználónév',
@@ -90,9 +90,6 @@ return [
         'online_players' => 'Elérhető játékosok',
         'motd' => 'MOTD',
         'map' => 'Térkép neve',
-        'units' => [
-            'mins' => 'perc',
-        ],
     ],
 
     'pages' => [

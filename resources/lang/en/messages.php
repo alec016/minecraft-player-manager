@@ -2,7 +2,7 @@
 
 return [
     'navigation_label' => 'Game Players',
-    
+
     'columns' => [
         'avatar' => 'Avatar',
         'name' => 'Username',
@@ -90,9 +90,6 @@ return [
         'online_players' => 'Online Players',
         'motd' => 'MOTD',
         'map' => 'Map Name',
-        'units' => [
-            'mins' => 'mins',
-        ],
     ],
 
     'pages' => [

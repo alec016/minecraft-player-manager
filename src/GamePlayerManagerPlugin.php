@@ -9,6 +9,8 @@ use App\Contracts\Plugins\HasPluginSettings;
 use App\Traits\EnvironmentWriterTrait;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use App\Models\Role;
+use App\Models\Subuser;
 
 class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
 {
@@ -22,10 +24,32 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
     public function register(Panel $panel): void
     {
         $id = str($panel->getId())->title();
-        
+
         // Discover Resources, Pages, and Widgets dynamically based on panel ID (Admin, Server, etc.)
         $panel->discoverResources(plugin_path($this->getId(), "src/Filament/$id/Resources"), "KumaGames\\GamePlayerManager\\Filament\\$id\\Resources");
         $panel->discoverWidgets(plugin_path($this->getId(), "src/Filament/$id/Widgets"), "KumaGames\\GamePlayerManager\\Filament\\$id\\Widgets");
+
+        if ($panel->getId() === 'admin') {
+            Role::registerCustomPermissions([
+                'minecraft-player-manager' => [
+                    'view',
+                    'view_inventory',
+                    'interact_with_player',
+                ]
+            ]);
+        }
+
+        if ($panel->getId() === 'server') {
+            Subuser::registerCustomPermissions(
+                'minecraft-player-manager',
+                [
+                    'view',
+                    'view_inventory',
+                    'interact_with_player',
+                ],
+                'heroicon-o-users'
+            );
+        }
     }
 
     public function boot(Panel $panel): void
@@ -37,7 +61,7 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
         // Only register widgets for the Server panel
         if ($panel->getId() === 'server') {
             \App\Filament\Server\Pages\Console::registerCustomWidgets(
-                \App\Enums\ConsoleWidgetPosition::AboveConsole, 
+                \App\Enums\ConsoleWidgetPosition::AboveConsole,
                 [\KumaGames\GamePlayerManager\Filament\Server\Widgets\PlayerCountWidget::class]
             );
         }
