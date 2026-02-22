@@ -10,6 +10,7 @@ use Filament\Resources\Pages\ManageRecords;
 class ManageRCONHosts extends ManageRecords
 {
     protected static string $resource = RCONHostResource::class;
+    protected static ?string $slug = 'rcon_hosts';
 
     protected function getHeaderActions(): array
     {

@@ -11,6 +11,7 @@ return new class extends Migration
       Schema::create('rcon_hosts', function (Blueprint $table) {
         $table->increments('id');
         $table->string('host');
+        $table->json('nodes');
         $table->timestamps();
       });
     }

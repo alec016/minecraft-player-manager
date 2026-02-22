@@ -9,11 +9,13 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use App\Models\Node;
 
 class RCONHostResource extends Resource
 {
@@ -23,17 +25,17 @@ class RCONHostResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return trans('minecraft-player-manager::messages.rcon_hosts');
+        return __('minecraft-player-manager::messages.rcon_hosts');
     }
 
     public static function getModelLabel(): string
     {
-        return trans('minecraft-player-manager::messages.rcon_host');
+        return __('minecraft-player-manager::messages.rcon_host');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return trans('minecraft-player-manager::messages.rcon_hosts');
+        return __('minecraft-player-manager::messages.rcon_hosts');
     }
 
     public static function getNavigationBadge(): ?string
@@ -51,6 +53,11 @@ class RCONHostResource extends Resource
                 TextColumn::make('host')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('nodes')
+                    ->label(__('game-player-manager::messages.rcon.nodes'))
+                    ->searchable()
+                    ->placeholder(__('game-player-manager::messages.rcon.all_nodes'))
+                    ->badge(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
@@ -66,7 +73,7 @@ class RCONHostResource extends Resource
             ])
             ->emptyStateIcon('tabler-server')
             ->emptyStateDescription('')
-            ->emptyStateHeading(trans('game-player-manager::messages.no_rconhosts'));
+            ->emptyStateHeading(__('game-player-manager::messages.no_rconhosts'));
     }
 
     public static function form(Schema $schema): Schema
@@ -74,9 +81,14 @@ class RCONHostResource extends Resource
         return $schema
         ->components([
             TextInput::make('host')
-                ->label(trans('game-player-manager::messages.host'))
-                ->placeholder(trans('game-player-manager::messages.no_host'))
+                ->label(__('game-player-manager::messages.host'))
+                ->placeholder(__('game-player-manager::messages.no_host'))
                 ->required()
+                ->columnSpanFull(),
+            Select::make('nodes')
+                ->label(__('game-player-manager::messages.rcon.nodes'))
+                ->multiple()
+                ->options(fn () => Node::all()->pluck('name', 'id'))
                 ->columnSpanFull(),
         ]);
     }
@@ -86,8 +98,13 @@ class RCONHostResource extends Resource
         return $schema
         ->components([
             TextEntry::make('host')
-                ->label(trans('game-player-manager::messages.host'))
+                ->label(__('game-player-manager::messages.host'))
+                ->columnSpanFull(),
+            TextEntry::make('nodes')
+                ->label(__('game-player-manager::messages.rcon.nodes'))
+                ->badge()
                 ->columnSpanFull()
+                ->getStateUsing(fn ($record) => $record->nodes->pluck('name')->join(', '))
         ]);
     }
 

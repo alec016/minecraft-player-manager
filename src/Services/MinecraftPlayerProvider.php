@@ -166,51 +166,59 @@ class MinecraftPlayerProvider implements GamePlayerService
     {
         $players = [];
         try {
-            $ip = $server->allocation->alias ?? $server->allocation->ip;
+            $nodeId =  $server->node->id;
+            $hosts = RconHost::whereJsonContains('nodes', $nodeId)
+                ->pluck('host')
+                ->toArray();
             $port = $server->allocation->port;
+            $socket = null;
+            foreach ($hosts as $ip) {
+                $socket = fsockopen("udp://$ip", $port, $errno, $errstr, 2);
+                if ($socket !== null) {
+                    break;
+                }
+            }
+            if ($socket !== null) {
+                stream_set_timeout($socket, 2);
+                
+                // Request Challenge
+                $sessionId = rand(1, 99999999) & 0x0F0F0F0F;
+                $payload = pack('c', 0xFE) . pack('c', 0xFD) . pack('c', 0x09) . pack('N', $sessionId);
+                fwrite($socket, $payload);
+                
+                $response = fread($socket, 4096);
+                if ($response) {
+                    $challengeStr = substr($response, 5);
+                    $challengeStr = trim($challengeStr); 
+                    $challenge = (int) $challengeStr;
 
-             $socket = fsockopen("udp://$ip", $port, $errno, $errstr, 2);
-             if ($socket) {
-                 stream_set_timeout($socket, 2);
-                 
-                 // Request Challenge
-                 $sessionId = rand(1, 99999999) & 0x0F0F0F0F;
-                 $payload = pack('c', 0xFE) . pack('c', 0xFD) . pack('c', 0x09) . pack('N', $sessionId);
-                 fwrite($socket, $payload);
-                 
-                 $response = fread($socket, 4096);
-                 if ($response) {
-                     $challengeStr = substr($response, 5);
-                     $challengeStr = trim($challengeStr); 
-                     $challenge = (int) $challengeStr;
+                    // Full Stat Request
+                    $payload2 = pack('c', 0xFE) . pack('c', 0xFD) . pack('c', 0x00) . 
+                                pack('N', $sessionId) . 
+                                pack('N', $challenge) . 
+                                pack('N', 0x00); 
+                    
+                    fwrite($socket, $payload2);
+                    $fullResponse = fread($socket, 4096);
+                    
+                    if ($fullResponse) {
+                        $body = substr($fullResponse, 16);
+                        $split = explode("\x00\x01player_\x00\x00", $body);
+                        
+                        if (count($split) > 1) {
+                        $playerSection = $split[1];
+                        $rawPlayers = explode("\x00", $playerSection);
 
-                     // Full Stat Request
-                     $payload2 = pack('c', 0xFE) . pack('c', 0xFD) . pack('c', 0x00) . 
-                                 pack('N', $sessionId) . 
-                                 pack('N', $challenge) . 
-                                 pack('N', 0x00); 
-                     
-                     fwrite($socket, $payload2);
-                     $fullResponse = fread($socket, 4096);
-                     
-                     if ($fullResponse) {
-                         $body = substr($fullResponse, 16);
-                         $split = explode("\x00\x01player_\x00\x00", $body);
-                         
-                         if (count($split) > 1) {
-                            $playerSection = $split[1];
-                            $rawPlayers = explode("\x00", $playerSection);
-
-                            foreach ($rawPlayers as $playerName) {
-                                if (!empty($playerName)) {
-                                    $players[] = $playerName;
-                                }
+                        foreach ($rawPlayers as $playerName) {
+                            if (!empty($playerName)) {
+                                $players[] = $playerName;
                             }
                         }
-                     }
-                 }
-                 fclose($socket);
-             }
+                    }
+                    }
+                }
+                fclose($socket);
+            }
         } catch (\Exception $e) {
             // Query failed
         }
@@ -317,7 +325,6 @@ class MinecraftPlayerProvider implements GamePlayerService
             // Failed to read properties
         }
 
-        $primaryHost = $server->allocation->alias ?? $server->allocation->ip;
         $hasPass = !empty($rconPassword);
 
         // Check setting
@@ -352,13 +359,14 @@ class MinecraftPlayerProvider implements GamePlayerService
              // 2. Connect RCON
             $hostsToTry = array_unique(
                 array_merge(
-                    // TODO: Make it by nodes and or servers
-                    RconHost::all()
+                    RconHost::whereJsonContains('nodes', $server->node->id)
                         ->pluck('host')
                         ->toArray(),
                     ['127.0.0.1','localhost']
                 )
             );
+
+            \Illuminate\Support\Facades\Log::warning("RCON Hosts to try: " . json_encode($hostsToTry));
             
             $connected = false;
             $lastError = '';

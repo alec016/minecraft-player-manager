@@ -6,6 +6,10 @@ return [
     'rcon_hosts' => 'RCON Hosts',
     'host' => 'Host',
     'no_host' => 'No Host',
+    'rcon' => [
+        'nodes' => 'Nodes',
+        'all_nodes' => 'All Nodes',
+    ],
 
     'navigation_label' => 'Game Players',
     
