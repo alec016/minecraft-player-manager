@@ -3,15 +3,13 @@
     "name": "Minecraft Player Manager",
     "description": "Manage Minecraft players directly from the Pelican Panel.",
     "category": "plugin",
-    "url": "https://github.com/kumagames-fou/minecraft-player-manager",
+    "url": "https://github.com/alec016/minecraft-player-manager",
     "update_url": null,
-    "version": "1.4.1",
-    "author": "KumaGames",
-    "namespace": "KumaGames\\GamePlayerManager",
+    "version": "1.4.2",
+    "author": "Alec_016",
+    "namespace": "Alec_016\\GamePlayerManager",
     "class": "GamePlayerManagerPlugin",
-    "panels": [
-        "admin",
-        "server"
-    ],
-    "panel_version": null
+    "panels": null,
+    "panel_version": null,
+    "composer_packages": null
 }

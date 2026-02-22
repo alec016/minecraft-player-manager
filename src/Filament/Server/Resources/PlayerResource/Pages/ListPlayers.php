@@ -1,10 +1,10 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
+namespace Alec_016\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
-use KumaGames\GamePlayerManager\Filament\Server\Resources\PlayerResource;
-use KumaGames\GamePlayerManager\Services\MinecraftPlayerProvider;
+use Alec_016\GamePlayerManager\Filament\Server\Resources\PlayerResource;
+use Alec_016\GamePlayerManager\Services\MinecraftPlayerProvider;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Facades\Filament;
 
@@ -66,7 +66,7 @@ class ListPlayers extends ListRecords
     public function getTableRecords(): \Illuminate\Support\Collection|\Illuminate\Contracts\Pagination\Paginator|\Illuminate\Contracts\Pagination\CursorPaginator
     {
         $data = $this->getCachedPlayers();
-        $collection = collect($data)->map(fn ($item) => new \KumaGames\GamePlayerManager\Models\Player($item));
+        $collection = collect($data)->map(fn ($item) => new \Alec_016\GamePlayerManager\Models\Player($item));
 
         $activeTab = $this->activeTab ?? 'all';
 
@@ -97,7 +97,7 @@ class ListPlayers extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \KumaGames\GamePlayerManager\Filament\Server\Widgets\PlayerCountWidget::class,
+            \Alec_016\GamePlayerManager\Filament\Server\Widgets\PlayerCountWidget::class,
         ];
     }
 
@@ -128,6 +128,6 @@ class ListPlayers extends ListRecords
         $details = $provider->getPlayerDetails($serverId, $key);
         $data = array_merge($recordRaw, $details);
         
-        return new \KumaGames\GamePlayerManager\Models\Player($data);
+        return new \Alec_016\GamePlayerManager\Models\Player($data);
     }
 }

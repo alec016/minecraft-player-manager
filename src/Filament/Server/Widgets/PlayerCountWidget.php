@@ -1,10 +1,10 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Filament\Server\Widgets;
+namespace Alec_016\GamePlayerManager\Filament\Server\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use App\Filament\Server\Components\SmallStatBlock;
-use KumaGames\GamePlayerManager\Services\MinecraftPlayerProvider;
+use Alec_016\GamePlayerManager\Services\MinecraftPlayerProvider;
 use Filament\Facades\Filament;
 
 class PlayerCountWidget extends BaseWidget

@@ -1,6 +1,6 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Services\Nbt;
+namespace Alec_016\GamePlayerManager\Services\Nbt;
 
 use Illuminate\Support\Facades\Log;
 

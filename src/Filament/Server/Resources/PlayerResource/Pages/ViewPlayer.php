@@ -1,10 +1,10 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
+namespace Alec_016\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
 
 use Filament\Resources\Pages\ViewRecord;
-use KumaGames\GamePlayerManager\Filament\Server\Resources\PlayerResource;
-use KumaGames\GamePlayerManager\Services\MinecraftPlayerProvider;
+use Alec_016\GamePlayerManager\Filament\Server\Resources\PlayerResource;
+use Alec_016\GamePlayerManager\Services\MinecraftPlayerProvider;
 use Filament\Facades\Filament;
 
 class ViewPlayer extends ViewRecord
@@ -26,7 +26,7 @@ class ViewPlayer extends ViewRecord
         
         $data = array_merge(['id' => $key], $details);
         
-        $player = new \KumaGames\GamePlayerManager\Models\Player($data);
+        $player = new \Alec_016\GamePlayerManager\Models\Player($data);
         $player->exists = true; // IMPORTANT: Required for Filament Actions to recognize the record context
         return $player;
     }

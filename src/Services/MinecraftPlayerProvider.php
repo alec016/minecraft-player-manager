@@ -1,13 +1,14 @@
 <?php
 
 
-namespace KumaGames\GamePlayerManager\Services;
+namespace Alec_016\GamePlayerManager\Services;
 
 use App\Models\Server;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\Wings\DaemonCommandRepository;
 
-use KumaGames\GamePlayerManager\Services\Nbt\NbtService;
+use Alec_016\GamePlayerManager\Services\Nbt\NbtService;
+use Alec_016\GamePlayerManager\Models\RconHost;
 
 class MinecraftPlayerProvider implements GamePlayerService
 {
@@ -319,8 +320,6 @@ class MinecraftPlayerProvider implements GamePlayerService
         $primaryHost = $server->allocation->alias ?? $server->allocation->ip;
         $hasPass = !empty($rconPassword);
 
-
-        
         // Check setting
         $rconEnabled = env('MC_PLAYER_MANAGER_RCON_ENABLED', false);
 
@@ -351,7 +350,15 @@ class MinecraftPlayerProvider implements GamePlayerService
             $details['status'] = 'Config Error';
         } else {
              // 2. Connect RCON
-            $hostsToTry = array_unique([$primaryHost, '127.0.0.1', 'localhost']);
+            $hostsToTry = array_unique(
+                array_merge(
+                    // TODO: Make it by nodes and or servers
+                    RconHost::all()
+                        ->pluck('host')
+                        ->toArray(),
+                    ['127.0.0.1','localhost']
+                )
+            );
             
             $connected = false;
             $lastError = '';

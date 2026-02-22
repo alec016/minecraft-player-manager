@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'no_rconhosts' => 'Sin RCON Hosts',
+    'rcon_host' => 'RCON Host',
+    'rcon_hosts' => 'RCON Hosts',
+    'host' => 'Host',
+    'no_host' => 'Sin Host',
 
     'title' => 'Jugadores del servidor',
 

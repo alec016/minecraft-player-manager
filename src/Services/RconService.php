@@ -1,6 +1,6 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Services;
+namespace Alec_016\GamePlayerManager\Services;
 
 class RconService
 {

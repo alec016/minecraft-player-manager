@@ -1,6 +1,11 @@
 <?php
 
-return [
+return [¡
+    'no_rconhosts' => 'No RCON Hosts',
+    'rcon_host' => 'RCON Host',
+    'rcon_hosts' => 'RCON Hosts',
+    'host' => 'Host',
+    'no_host' => 'No Host',
     'navigation_label' => 'ゲームプレイヤー',
     
     'columns' => [

@@ -1,19 +1,19 @@
 <?php
 
-namespace KumaGames\GamePlayerManager\Filament\Server\Resources;
+namespace Alec_016\GamePlayerManager\Filament\Server\Resources;
 
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use KumaGames\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
-use KumaGames\GamePlayerManager\Services\MinecraftPlayerProvider;
+use Alec_016\GamePlayerManager\Filament\Server\Resources\PlayerResource\Pages;
+use Alec_016\GamePlayerManager\Services\MinecraftPlayerProvider;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 
 class PlayerResource extends Resource
 {
-    protected static ?string $model = \KumaGames\GamePlayerManager\Models\Player::class;
+    protected static ?string $model = \Alec_016\GamePlayerManager\Models\Player::class;
     protected static ?string $slug = 'game-players';
     protected static string | \BackedEnum | null $navigationIcon = 'tabler-users-group';
     

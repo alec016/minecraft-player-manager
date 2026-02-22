@@ -1,6 +1,6 @@
 <?php
 
-namespace KumaGames\GamePlayerManager;
+namespace Alec_016\GamePlayerManager;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
@@ -8,6 +8,7 @@ use Filament\Panel;
 use App\Contracts\Plugins\HasPluginSettings;
 use App\Traits\EnvironmentWriterTrait;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 
 class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
@@ -24,8 +25,8 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
         $id = str($panel->getId())->title();
         
         // Discover Resources, Pages, and Widgets dynamically based on panel ID (Admin, Server, etc.)
-        $panel->discoverResources(plugin_path($this->getId(), "src/Filament/$id/Resources"), "KumaGames\\GamePlayerManager\\Filament\\$id\\Resources");
-        $panel->discoverWidgets(plugin_path($this->getId(), "src/Filament/$id/Widgets"), "KumaGames\\GamePlayerManager\\Filament\\$id\\Widgets");
+        $panel->discoverResources(plugin_path($this->getId(), "src/Filament/$id/Resources"), "Alec_016\\GamePlayerManager\\Filament\\$id\\Resources");
+        $panel->discoverWidgets(plugin_path($this->getId(), "src/Filament/$id/Widgets"), "Alec_016\\GamePlayerManager\\Filament\\$id\\Widgets");
     }
 
     public function boot(Panel $panel): void
@@ -38,7 +39,7 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
         if ($panel->getId() === 'server') {
             \App\Filament\Server\Pages\Console::registerCustomWidgets(
                 \App\Enums\ConsoleWidgetPosition::AboveConsole, 
-                [\KumaGames\GamePlayerManager\Filament\Server\Widgets\PlayerCountWidget::class]
+                [\Alec_016\GamePlayerManager\Filament\Server\Widgets\PlayerCountWidget::class]
             );
         }
     }
@@ -50,11 +51,11 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
                 ->label(__('minecraft-player-manager::messages.settings.rcon_enabled'))
                 ->helperText(__('minecraft-player-manager::messages.settings.rcon_enabled_helper'))
                 ->default(env('MC_PLAYER_MANAGER_RCON_ENABLED', false)),
-            \Filament\Forms\Components\TextInput::make('nav_sort')
+            TextInput::make('nav_sort')
                 ->label(__('minecraft-player-manager::messages.settings.nav_sort'))
                 ->helperText(__('minecraft-player-manager::messages.settings.nav_sort_helper'))
                 ->numeric()
-                ->default(env('MC_PLAYER_MANAGER_NAV_SORT', 2)),
+                ->default(env('MC_PLAYER_MANAGER_NAV_SORT', 2))
         ];
     }
 
@@ -62,7 +63,7 @@ class GamePlayerManagerPlugin implements Plugin, HasPluginSettings
     {
         $this->writeToEnvironment([
             'MC_PLAYER_MANAGER_RCON_ENABLED' => $data['rcon_enabled'],
-            'MC_PLAYER_MANAGER_NAV_SORT' => $data['nav_sort'],
+            'MC_PLAYER_MANAGER_NAV_SORT' => $data['nav_sort']
         ]);
 
         Notification::make()
